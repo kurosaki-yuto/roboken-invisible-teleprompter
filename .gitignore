@@ -1,0 +1,24 @@
+# Dependencies
+**/node_modules/
+
+# Electron / Vite
+**/dist/
+**/out/
+
+# Env（.env.example は追跡）
+.env
+.env.local
+.env.*.local
+
+# SQLite（ローカル開発）
+**/*.db
+**/*.db-journal
+
+# OS / ツール
+.DS_Store
+.eslintcache
+.cursor/
+
+# Logs
+*.log
+npm-debug.log*

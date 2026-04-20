@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/* ── Design tokens ── */
+@theme {
+  --color-surface-1: rgba(255 255 255 / 0.03);
+  --color-surface-2: rgba(255 255 255 / 0.05);
+  --color-surface-3: rgba(255 255 255 / 0.08);
+  --color-border-subtle: rgba(255 255 255 / 0.05);
+  --color-border-light: rgba(255 255 255 / 0.08);
+  --color-border-medium: rgba(255 255 255 / 0.15);
+  --color-border-strong: rgba(255 255 255 / 0.25);
+  --color-bg-base: #070812;
+  --color-bg-elevated: #0a0d1e;
+}
+
+/* ── Base ── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    user-select: none;
+    background: transparent;
+    color: rgba(255 255 245 / 0.86);
+    font-family:
+      'SF Pro Display',
+      'SF Pro Text',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Helvetica Neue',
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+  }
+}
+
+/* ── Custom utilities ── */
+@utility animation-delay-150 {
+  animation-delay: 150ms;
+}
+
+@utility animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+@utility bg-dashboard {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99, 102, 241, 0.1), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(239, 68, 68, 0.07), transparent 60%),
+    linear-gradient(180deg, rgba(10, 13, 30, 0.88) 0%, rgba(7, 8, 18, 0.88) 100%);
+}
+
+@utility shadow-rec-glow {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+}
+
+@utility shadow-record-idle {
+  box-shadow:
+    0 8px 32px rgba(239, 68, 68, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+@utility shadow-record-hover {
+  box-shadow:
+    0 0 48px rgba(239, 68, 68, 0.5),
+    0 8px 32px rgba(239, 68, 68, 0.3);
+}
+
+@utility shadow-ai-btn {
+  box-shadow:
+    0 8px 24px rgba(139, 92, 246, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+@utility glow-badge-blue {
+  box-shadow:
+    0 0 8px rgba(96, 165, 250, 0.6),
+    0 0 16px rgba(96, 165, 250, 0.3);
+}
+
+@utility waveform-bar {
+  transition:
+    height 0.08s ease,
+    y 0.08s ease;
+}
+
+@utility text-shadow-overlay {
+  text-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.8),
+    0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+@utility teleprompter-card {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+}

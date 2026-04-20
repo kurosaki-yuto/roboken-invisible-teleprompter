@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Meeting {
+  id              Int            @id @default(autoincrement())
+  title           String
+  date            DateTime       @default(now())
+  durationSeconds Int            @default(0)
+  totalTranscript String         @default("")
+  summary         String         @default("")
+  images          MeetingImage[]
+}
+
+model MeetingImage {
+  id        Int      @id @default(autoincrement())
+  meetingId Int
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  imagePath String
+  timestamp DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String @default("")
+}

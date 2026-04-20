@@ -1,0 +1,18 @@
+-- CreateTable
+CREATE TABLE "Meeting" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "durationSeconds" INTEGER NOT NULL DEFAULT 0,
+    "totalTranscript" TEXT NOT NULL DEFAULT '',
+    "summary" TEXT NOT NULL DEFAULT ''
+);
+
+-- CreateTable
+CREATE TABLE "MeetingImage" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "meetingId" INTEGER NOT NULL,
+    "imagePath" TEXT NOT NULL,
+    "timestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "MeetingImage_meetingId_fkey" FOREIGN KEY ("meetingId") REFERENCES "Meeting" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
