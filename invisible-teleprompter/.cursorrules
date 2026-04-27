@@ -1,0 +1,16 @@
+# .cursorrules
+You are an expert developer in Electron, React, TypeScript, and Tailwind CSS.
+
+Project layout:
+- Main process: src/main/ (CommonJS, Node types)
+- Preload: src/preload/
+- Renderer (React): src/renderer/src/
+- Shared types: src/types/
+
+Conventions:
+- Use functional React components with Hooks only.
+- Style with Tailwind utility classes; avoid global CSS outside base/components/utilities.
+- Cross-platform (Windows/Mac). Avoid OS-specific shell calls in renderer.
+- Never access Node APIs from renderer — use preload contextBridge.
+- IPC channel names live in src/types/ipc.ts as const.
+- Secrets: .env read by main process, forwarded via IPC.

@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "Mienaq"
+  },
+  "nav": {
+    "settings": "設定",
+    "history": "履歴",
+    "back_dashboard": "← ダッシュボード",
+    "legal": "利用規約・プライバシー"
+  },
+  "dashboard": {
+    "prepare": "会議の準備",
+    "title_label": "タイトル",
+    "title_placeholder": "例：A社 提案ミーティング",
+    "context_label": "追加コンテキスト（任意）",
+    "context_placeholder": "相手の背景・譲れない条件・狙いどころ 等",
+    "start": "会議を開始",
+    "end_save": "会議を終了して保存",
+    "saving": "保存中…",
+    "think": "相談 (Cmd/Ctrl+K)",
+    "status_idle": "待機中",
+    "status_area_ok": "領域指定完了。Cmd/Ctrl + K で AI に相談できます。",
+    "status_area_first": "先に領域を指定してください",
+    "status_shooting": "スクショ取得中…",
+    "status_thinking": "AI に相談中…",
+    "status_displayed": "回答を Teleprompter に表示しました",
+    "status_saved": "会議を保存しました（#{{id}}）",
+    "status_save_failed": "保存失敗: {{msg}}",
+    "status_error": "エラー: {{msg}}",
+    "status_mic_needed": "マイクの許可が必要です",
+    "status_selecting": "画面領域を選択してください…",
+    "rec_error": "録音エラー: {{msg}}",
+    "latest_ai": "最新のAI回答",
+    "latest_shot": "最新スクショ",
+    "no_result": "まだありません。会議中に Cmd/Ctrl + K を押してください。",
+    "no_shot": "領域指定後に表示されます",
+    "transcript_debug": "文字起こしログ（デバッグ）",
+    "no_transcript": "まだ発言なし",
+    "key_missing_banner": "Gemini API キーが未設定です。",
+    "key_missing_link": "設定から入力",
+    "key_missing_suffix": "してください（Google AI Studio で無料発行可）。",
+    "license_inactive_banner": "ライセンス未認証です。体験版として動作しています。",
+    "license_inactive_cta": "ライセンスを有効化"
+  },
+  "teleprompter": {
+    "thinking": "考え中…",
+    "hint": "Cmd/Ctrl + K で AI に相談",
+    "label_counter": "論破",
+    "label_agree_propose": "同調＋提案",
+    "label_question_back": "質問返し"
+  },
+  "settings": {
+    "title": "設定",
+    "section_key": "Gemini API キー",
+    "key_desc": "Google AI Studio（aistudio.google.com/apikey）で無料発行できます。入力後「保存」、必要なら「接続テスト」で疎通確認。キーはこの PC の userData/settings.json にのみ保存されます。ネットワーク送信やアップロードはしません。",
+    "key_from_env": "現在「.env」ファイル経由でキーが読み込まれています。アプリ内設定で上書きすると、以降はこちらが優先されます。",
+    "gemini_label": "Gemini API Key（必須）",
+    "deepgram_label": "Deepgram API Key（任意・将来の音声認識差し替え用）",
+    "deepgram_placeholder": "（空欄で可）",
+    "save": "保存",
+    "saving": "保存中…",
+    "test": "接続テスト",
+    "testing": "テスト中…",
+    "back": "戻る",
+    "saved_ok": "保存しました",
+    "test_ok": "API キーは有効です ✓",
+    "test_ng": "無効: {{msg}}",
+    "section_license": "ライセンス",
+    "license_desc": "購入時に発行されたライセンスキーを入力してください。",
+    "license_label": "ライセンスキー",
+    "license_activate": "有効化",
+    "license_activating": "検証中…",
+    "license_active": "ライセンス有効（{{tier}}）",
+    "license_until": "有効期限: {{date}}",
+    "license_invalid": "無効なライセンスキーです",
+    "section_language": "言語",
+    "language_label": "表示言語"
+  },
+  "history": {
+    "title": "議事録履歴",
+    "search_placeholder": "タイトル・本文で検索",
+    "loading": "読み込み中…",
+    "empty": "該当する会議がありません",
+    "pick": "左のリストから会議を選んでください",
+    "summary": "サマリー",
+    "transcript": "文字起こし",
+    "no_summary": "（未生成）",
+    "duration": "{{min}} 分 / 画像 {{count}}枚"
+  },
+  "overlay_picker": {
+    "hint": "相手の画面共有エリアをドラッグで囲んでください（Esc でキャンセル）"
+  },
+  "transcript": {
+    "self": "自分",
+    "other": "相手"
+  },
+  "legal": {
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー",
+    "commerce": "特定商取引法に基づく表記",
+    "faq": "よくある質問"
+  }
+}

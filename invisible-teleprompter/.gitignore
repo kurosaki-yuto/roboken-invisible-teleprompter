@@ -1,12 +1,11 @@
-node_modules
-dist
-out
-.DS_Store
-.eslintcache
-*.log*
+node_modules/
+dist/
 .env
 .env.local
+*.log
+.DS_Store
+data/
+out/
 
-/src/generated/prisma
-prisma/*.db
-prisma/*.db-journal
+# 内部戦略ドキュメント（公開リポジトリには含めない）
+.requirements/

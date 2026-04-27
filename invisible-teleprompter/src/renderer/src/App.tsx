@@ -1,22 +1,21 @@
+import React from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
-import Dashboard from './components/Dashboard'
-import Teleprompter from './components/Teleprompter'
-import Overlay from './components/Overlay'
-import History from './components/History'
-import Settings from './components/Settings'
+import Dashboard from './pages/Dashboard'
+import Overlay from './pages/Overlay'
+import Teleprompter from './pages/Teleprompter'
+import History from './pages/History'
+import Settings from './pages/Settings'
 
-function App(): React.JSX.Element {
+export default function App() {
   return (
     <HashRouter>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/teleprompter" element={<Teleprompter />} />
-        <Route path="/overlay" element={<Overlay />} />
         <Route path="/history" element={<History />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/overlay" element={<Overlay />} />
+        <Route path="/teleprompter" element={<Teleprompter />} />
       </Routes>
     </HashRouter>
   )
 }
-
-export default App

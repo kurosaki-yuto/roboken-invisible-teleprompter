@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "Mienaq"
+  },
+  "nav": {
+    "settings": "Settings",
+    "history": "History",
+    "back_dashboard": "← Dashboard",
+    "legal": "Terms & Privacy"
+  },
+  "dashboard": {
+    "prepare": "Prepare meeting",
+    "title_label": "Title",
+    "title_placeholder": "e.g. Sales call with ACME Corp",
+    "context_label": "Extra context (optional)",
+    "context_placeholder": "Counterparty background, non-negotiables, goals…",
+    "start": "Start meeting",
+    "end_save": "End & save meeting",
+    "saving": "Saving…",
+    "think": "Think (Cmd/Ctrl+K)",
+    "status_idle": "Idle",
+    "status_area_ok": "Region set. Press Cmd/Ctrl + K to consult the AI.",
+    "status_area_first": "Please select a region first.",
+    "status_shooting": "Capturing screenshot…",
+    "status_thinking": "Consulting AI…",
+    "status_displayed": "Answers shown in Teleprompter.",
+    "status_saved": "Meeting saved (#{{id}}).",
+    "status_save_failed": "Save failed: {{msg}}",
+    "status_error": "Error: {{msg}}",
+    "status_mic_needed": "Microphone permission is required.",
+    "status_selecting": "Please drag to select a region…",
+    "rec_error": "Recorder error: {{msg}}",
+    "latest_ai": "Latest AI answers",
+    "latest_shot": "Latest screenshot",
+    "no_result": "None yet. Press Cmd/Ctrl + K during a meeting.",
+    "no_shot": "Appears after a region is selected.",
+    "transcript_debug": "Transcript (debug)",
+    "no_transcript": "No speech yet.",
+    "key_missing_banner": "Gemini API key is not set.",
+    "key_missing_link": "Enter it in Settings",
+    "key_missing_suffix": " (free key on Google AI Studio).",
+    "license_inactive_banner": "License not activated — running in trial mode.",
+    "license_inactive_cta": "Activate license"
+  },
+  "teleprompter": {
+    "thinking": "Thinking…",
+    "hint": "Press Cmd/Ctrl + K to consult the AI.",
+    "label_counter": "Rebut",
+    "label_agree_propose": "Agree + Propose",
+    "label_question_back": "Question back"
+  },
+  "settings": {
+    "title": "Settings",
+    "section_key": "Gemini API key",
+    "key_desc": "Generate a free key at Google AI Studio (aistudio.google.com/apikey). After entering, press Save and optionally Test. The key is stored only on this PC (userData/settings.json) and is never uploaded.",
+    "key_from_env": "Currently loaded from a .env file. Saving here will override it.",
+    "gemini_label": "Gemini API Key (required)",
+    "deepgram_label": "Deepgram API Key (optional)",
+    "deepgram_placeholder": "(optional)",
+    "save": "Save",
+    "saving": "Saving…",
+    "test": "Test connection",
+    "testing": "Testing…",
+    "back": "Back",
+    "saved_ok": "Saved.",
+    "test_ok": "API key is valid ✓",
+    "test_ng": "Invalid: {{msg}}",
+    "section_license": "License",
+    "license_desc": "Enter the license key you received after purchase.",
+    "license_label": "License key",
+    "license_activate": "Activate",
+    "license_activating": "Validating…",
+    "license_active": "License active ({{tier}})",
+    "license_until": "Valid until: {{date}}",
+    "license_invalid": "Invalid license key.",
+    "section_language": "Language",
+    "language_label": "Display language"
+  },
+  "history": {
+    "title": "Meeting history",
+    "search_placeholder": "Search by title or text",
+    "loading": "Loading…",
+    "empty": "No meetings found.",
+    "pick": "Pick a meeting from the list on the left.",
+    "summary": "Summary",
+    "transcript": "Transcript",
+    "no_summary": "(not generated)",
+    "duration": "{{min}} min / {{count}} images"
+  },
+  "overlay_picker": {
+    "hint": "Drag to box the counterparty's screen-share area (Esc to cancel)."
+  },
+  "transcript": {
+    "self": "You",
+    "other": "Other"
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "commerce": "Notation based on Specified Commercial Transactions Act",
+    "faq": "FAQ"
+  }
+}
