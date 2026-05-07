@@ -4,6 +4,7 @@ import type {
   ElectronAPI,
   TranscriptEntry,
   PushToThinkResult,
+  LicenseStateView,
 } from '../types/ipc'
 import { IPC } from '../types/ipc'
 
@@ -33,6 +34,12 @@ const api: ElectronAPI = {
   enableLoopbackAudio: () => ipcRenderer.invoke(IPC.ENABLE_LOOPBACK),
   disableLoopbackAudio: () => ipcRenderer.invoke(IPC.DISABLE_LOOPBACK),
 
+  getLicense: () => ipcRenderer.invoke(IPC.GET_LICENSE),
+  activateLicense: (key) => ipcRenderer.invoke(IPC.ACTIVATE_LICENSE, key),
+  deactivateLicense: () => ipcRenderer.invoke(IPC.DEACTIVATE_LICENSE),
+  refreshLicense: () => ipcRenderer.invoke(IPC.REFRESH_LICENSE),
+  setInternalBypass: (enabled) => ipcRenderer.invoke(IPC.SET_INTERNAL_BYPASS, enabled),
+
   onSelectionBounds: (cb) => {
     const handler = (_event: unknown, bounds: CaptureBounds) => cb(bounds)
     ipcRenderer.on(IPC.EV_SELECTION_BOUNDS, handler as any)
@@ -52,6 +59,11 @@ const api: ElectronAPI = {
     const handler = (_event: unknown, result: PushToThinkResult) => cb(result)
     ipcRenderer.on(IPC.EV_PATTERNS, handler as any)
     return () => ipcRenderer.removeListener(IPC.EV_PATTERNS, handler as any)
+  },
+  onLicenseChanged: (cb) => {
+    const handler = (_event: unknown, state: LicenseStateView) => cb(state)
+    ipcRenderer.on(IPC.EV_LICENSE_CHANGED, handler as any)
+    return () => ipcRenderer.removeListener(IPC.EV_LICENSE_CHANGED, handler as any)
   },
 }
 

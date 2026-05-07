@@ -112,11 +112,30 @@ export interface ElectronAPI {
   enableLoopbackAudio: () => Promise<void>
   disableLoopbackAudio: () => Promise<void>
 
+  // License (Stripe月額20ドルサブスク)
+  getLicense: () => Promise<LicenseStateView>
+  activateLicense: (licenseKey: string) => Promise<LicenseStateView>
+  deactivateLicense: () => Promise<LicenseStateView>
+  refreshLicense: () => Promise<LicenseStateView>
+  setInternalBypass: (enabled: boolean) => Promise<LicenseStateView>
+
   // Listeners
   onSelectionBounds: (cb: (bounds: CaptureBounds) => void) => () => void
   onTriggerThink: (cb: () => void) => () => void
   onTranscript: (cb: (entry: TranscriptEntry) => void) => () => void
   onPatternsUpdated: (cb: (result: PushToThinkResult) => void) => () => void
+  onLicenseChanged: (cb: (state: LicenseStateView) => void) => () => void
+}
+
+export interface LicenseStateView {
+  status: 'inactive' | 'active' | 'past_due' | 'canceled' | 'trialing' | 'unknown'
+  hasKey: boolean
+  customerId?: string
+  subscriptionId?: string
+  currentPeriodEnd?: number
+  lastVerifiedAt?: number
+  internalBypass?: boolean
+  featureAllowed: boolean
 }
 
 export const IPC = {
@@ -138,9 +157,16 @@ export const IPC = {
   REVEAL_IN_FOLDER: 'reveal-in-folder',
   ENABLE_LOOPBACK: 'enable-loopback-audio',
   DISABLE_LOOPBACK: 'disable-loopback-audio',
+  // license
+  GET_LICENSE: 'get-license',
+  ACTIVATE_LICENSE: 'activate-license',
+  DEACTIVATE_LICENSE: 'deactivate-license',
+  REFRESH_LICENSE: 'refresh-license',
+  SET_INTERNAL_BYPASS: 'set-internal-bypass',
   // events (main → renderer)
   EV_SELECTION_BOUNDS: 'ev:selection-bounds',
   EV_TRIGGER_THINK: 'ev:trigger-think',
   EV_TRANSCRIPT: 'ev:transcript',
   EV_PATTERNS: 'ev:patterns-updated',
+  EV_LICENSE_CHANGED: 'ev:license-changed',
 } as const

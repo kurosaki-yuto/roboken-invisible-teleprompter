@@ -6,6 +6,14 @@ import { captureRegion } from './capture'
 import { pushToThink, pushToThinkFast, generateMeetingSummary } from './ai'
 import { insertMeeting, listMeetings, getMeeting, updateMeetingFolder } from './db'
 import { archiveMeeting, archiveBaseDir } from './archiver'
+import {
+  getLicenseState,
+  activateLicense,
+  deactivateLicense,
+  refreshLicense,
+  setInternalBypass,
+  isFeatureAllowed,
+} from './license'
 import { GoogleGenAI } from '@google/genai'
 import Anthropic from '@anthropic-ai/sdk'
 import {
@@ -373,9 +381,59 @@ ipcMain.handle(IPC.REVEAL_IN_FOLDER, (_event, p: string) => {
   if (p && typeof p === 'string') shell.showItemInFolder(p)
 })
 
+// ----- License IPC -----
+function licenseStateView() {
+  const s = getLicenseState()
+  return {
+    status: s.status,
+    hasKey: !!s.licenseKey,
+    customerId: s.customerId,
+    subscriptionId: s.subscriptionId,
+    currentPeriodEnd: s.currentPeriodEnd,
+    lastVerifiedAt: s.lastVerifiedAt,
+    internalBypass: s.internalBypass,
+    featureAllowed: isFeatureAllowed(),
+  }
+}
+
+ipcMain.handle(IPC.GET_LICENSE, () => licenseStateView())
+
+ipcMain.handle(IPC.ACTIVATE_LICENSE, async (_event, key: string) => {
+  await activateLicense(key)
+  const view = licenseStateView()
+  broadcast(IPC.EV_LICENSE_CHANGED, view)
+  return view
+})
+
+ipcMain.handle(IPC.DEACTIVATE_LICENSE, async () => {
+  await deactivateLicense()
+  const view = licenseStateView()
+  broadcast(IPC.EV_LICENSE_CHANGED, view)
+  return view
+})
+
+ipcMain.handle(IPC.REFRESH_LICENSE, async () => {
+  await refreshLicense()
+  const view = licenseStateView()
+  broadcast(IPC.EV_LICENSE_CHANGED, view)
+  return view
+})
+
+ipcMain.handle(IPC.SET_INTERNAL_BYPASS, (_event, enabled: boolean) => {
+  setInternalBypass(!!enabled)
+  const view = licenseStateView()
+  broadcast(IPC.EV_LICENSE_CHANGED, view)
+  return view
+})
+
 // ----- Lifecycle -----
 app.whenReady().then(() => {
   createDashboardWindow()
+
+  // 起動時にライセンス状態を非同期リフレッシュ（失敗してもアプリは止めない）
+  refreshLicense()
+    .then((s) => console.log('[main] license refreshed at startup, status=', s.status))
+    .catch((e) => console.warn('[main] license refresh skipped:', e))
 
   // Push-to-Think: 複数の組み合わせをすべて登録（ユーザーの押しグセや他アプリ衝突対策）
   const thinkAccelerators = [

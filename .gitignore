@@ -22,3 +22,9 @@
 # Logs
 *.log
 npm-debug.log*
+
+# バックアップ
+invisible-teleprompter.bak-*/
+
+# Finder一時ファイル
+.!*
