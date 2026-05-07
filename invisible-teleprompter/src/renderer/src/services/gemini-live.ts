@@ -31,8 +31,8 @@ Strict rules:
 
 // Hangul / Thai / Arabic / Devanagari / Hebrew / Cyrillic / Greek など、明らかに日本語でも英語でもない文字群
 const NON_JA_EN_SCRIPTS = /[Ͱ-ϿЀ-ӿԀ-ԯ԰-֏֐-׿؀-ۿऀ-ॿঀ-৿฀-๿가-힯]/
-// Hangul など（en モードで日本語・中国語・ハングル・キリル・タイ等が混じった場合のマーカー）
-const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ฀-๿]/
+// en モードで日本語・中国語・ハングル・キリル・ギリシャ・アラビア・ヘブライ・タイ・デーヴァナーガリー等が混じった場合のマーカー
+const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-鿿Ͱ-ϿЀ-ӿԀ-ԯ԰-֏֐-׿؀-ۿऀ-ॿঀ-৿฀-๿가-힯]/
 function isLikelyMisrecognition(text: string, lang: Language): boolean {
   // 注意：Gemini は inputTranscription をチャンク単位で吐くので、
   // 1文字や句読点単体は正常な部分結果のことが多い。スクリプト判定のみ行う。

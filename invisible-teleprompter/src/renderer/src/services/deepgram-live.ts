@@ -2,7 +2,7 @@ import type { Language, TranscriptEntry } from '../../../types/ipc'
 
 // 言語モード外の文字（ハングル/タイ/アラビア/キリル/ギリシャ等）が混ざったら誤認識として破棄
 const NON_JA_EN_SCRIPTS = /[Ͱ-ϿЀ-ӿԀ-ԯ԰-֏֐-׿؀-ۿऀ-ॿঀ-৿฀-๿가-힯]/
-const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ฀-๿]/
+const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-鿿Ͱ-ϿЀ-ӿԀ-ԯ԰-֏֐-׿؀-ۿऀ-ॿঀ-৿฀-๿가-힯]/
 // 句読点・記号・空白だけ／1文字以下の出力はノイズとみなす
 const SYMBOLS_ONLY = /^[\s\p{P}\p{S}]+$/u
 
