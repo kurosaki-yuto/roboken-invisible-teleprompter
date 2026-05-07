@@ -1,10 +1,14 @@
 import type { Language, TranscriptEntry } from '../../../types/ipc'
 
-// 言語モード外の文字（ハングル/タイ/アラビア等）が混ざったら誤認識として破棄
-const NON_JA_EN_SCRIPTS = /[֐-׿؀-ۿऀ-ॿ฀-๿가-힯]/
-const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-龯가-힯]/
+// 言語モード外の文字（ハングル/タイ/アラビア/キリル/ギリシャ等）が混ざったら誤認識として破棄
+const NON_JA_EN_SCRIPTS = /[Ͱ-ϿЀ-ӿԀ-ԯ԰-֏֐-׿؀-ۿऀ-ॿঀ-৿฀-๿가-힯]/
+const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ฀-๿]/
+// 句読点・記号・空白だけ／1文字以下の出力はノイズとみなす
+const SYMBOLS_ONLY = /^[\s\p{P}\p{S}]+$/u
 
 function isLikelyMisrecognition(text: string, lang: Language): boolean {
+  if (text.length <= 1) return true
+  if (SYMBOLS_ONLY.test(text)) return true
   if (lang === 'ja') return NON_JA_EN_SCRIPTS.test(text)
   return NON_EN_SCRIPTS.test(text)
 }

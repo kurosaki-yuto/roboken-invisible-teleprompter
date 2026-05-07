@@ -13,6 +13,7 @@ const api: ElectronAPI = {
   finishSelection: (bounds) => ipcRenderer.send(IPC.FINISH_SELECTION, bounds),
   cancelSelection: () => ipcRenderer.send(IPC.CANCEL_SELECTION),
   endMeeting: () => ipcRenderer.send(IPC.END_MEETING),
+  hideTeleprompter: () => ipcRenderer.send(IPC.HIDE_TELEPROMPTER),
 
   getApiKeys: () => ipcRenderer.invoke(IPC.GET_API_KEYS),
   setApiKeys: (settings) => ipcRenderer.invoke(IPC.SET_API_KEYS, settings),

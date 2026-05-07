@@ -31,8 +31,27 @@ export default function Teleprompter() {
   return (
     <div className="teleprompter-root h-full w-full flex flex-col relative">
       {/* ドラッグハンドル：このバーを掴んで移動 */}
-      <div className="teleprompter-drag-handle">
-        ドラッグで移動 ・ 右下で拡大縮小 ・ 画面共有には映りません
+      <div className="teleprompter-drag-handle flex items-center justify-between">
+        <span>ドラッグで移動 ・ 右下で拡大縮小 ・ 画面共有には映りません</span>
+        <button
+          type="button"
+          onClick={() => window.api.hideTeleprompter()}
+          title="非表示 (Cmd+Shift+T で再表示)"
+          aria-label="非表示"
+          style={{
+            WebkitAppRegion: 'no-drag',
+            background: 'rgba(255,255,255,0.15)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            padding: '2px 8px',
+            cursor: 'pointer',
+            fontSize: 12,
+            marginLeft: 8,
+          } as React.CSSProperties}
+        >
+          × 非表示
+        </button>
       </div>
 
       {/* 本体：AI回答表示エリア */}

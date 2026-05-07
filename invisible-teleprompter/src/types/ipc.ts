@@ -66,6 +66,7 @@ export interface ElectronAPI {
   finishSelection: (bounds: CaptureBounds) => void
   cancelSelection: () => void
   endMeeting: () => void
+  hideTeleprompter: () => void
 
   // Keys
   getApiKeys: () => Promise<ApiKeys>
@@ -143,6 +144,7 @@ export const IPC = {
   FINISH_SELECTION: 'finish-selection',
   CANCEL_SELECTION: 'cancel-selection',
   END_MEETING: 'end-meeting',
+  HIDE_TELEPROMPTER: 'hide-teleprompter',
   GET_API_KEYS: 'get-api-keys',
   SET_API_KEYS: 'set-api-keys',
   TEST_API_KEY: 'test-api-key',

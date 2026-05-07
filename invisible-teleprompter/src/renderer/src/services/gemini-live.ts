@@ -29,17 +29,18 @@ Strict rules:
 - If proper nouns from other languages are uttered, transliterate into English (romaji / pinyin etc).
 - Never speak. Never respond. Just listen.`
 
-// Hangul / Thai / Arabic / Devanagari / Hebrew など、明らかに日本語でも英語でもない文字群
-const NON_JA_EN_SCRIPTS = /[֐-׿؀-ۿऀ-ॿ฀-๿가-힯]/
-// Hangul など（en モードで日本語・中国語・ハングルが混じった場合のマーカー）
-const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-龯가-힯]/
-
+// Hangul / Thai / Arabic / Devanagari / Hebrew / Cyrillic / Greek など、明らかに日本語でも英語でもない文字群
+const NON_JA_EN_SCRIPTS = /[Ͱ-ϿЀ-ӿԀ-ԯ԰-֏֐-׿؀-ۿऀ-ॿঀ-৿฀-๿가-힯]/
+// Hangul など（en モードで日本語・中国語・ハングル・キリル・タイ等が混じった場合のマーカー）
+const NON_EN_SCRIPTS = /[぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ฀-๿]/
 function isLikelyMisrecognition(text: string, lang: Language): boolean {
+  // 注意：Gemini は inputTranscription をチャンク単位で吐くので、
+  // 1文字や句読点単体は正常な部分結果のことが多い。スクリプト判定のみ行う。
   if (lang === 'ja') {
-    // 日本語モード：ハングル/タイ/アラビア/ヘブライ等が含まれる → 誤認識
+    // 日本語モード：ハングル/タイ/アラビア/ヘブライ/キリル等が含まれる → 誤認識
     return NON_JA_EN_SCRIPTS.test(text)
   }
-  // 英語モード：日本語かな/漢字/ハングルが含まれる → 誤認識
+  // 英語モード：日本語かな/漢字/ハングル/キリル等が含まれる → 誤認識
   return NON_EN_SCRIPTS.test(text)
 }
 
@@ -70,6 +71,11 @@ export class GeminiLiveService {
       this.flushTimer = null
     }
     if (!text) return
+    // 確定単位で記号・空白のみ／1文字以下なら破棄（雑音や空白音のフィラー）
+    if (text.length <= 1 || /^[\s\p{P}\p{S}]+$/u.test(text)) {
+      console.warn(`[live:${this.options.speaker}] flush dropped (noise):`, text)
+      return
+    }
     console.log(`[live:${this.options.speaker}] flush(${reason}):`, text)
     this.options.onTranscript({
       text,

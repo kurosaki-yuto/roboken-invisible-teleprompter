@@ -194,6 +194,11 @@ ipcMain.on(IPC.CANCEL_SELECTION, () => {
   }
 })
 
+ipcMain.on(IPC.HIDE_TELEPROMPTER, () => {
+  const t = registry.teleprompter
+  if (t && !t.isDestroyed() && t.isVisible()) t.hide()
+})
+
 ipcMain.on(IPC.END_MEETING, () => {
   if (registry.teleprompter) {
     registry.teleprompter.close()
