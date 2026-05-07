@@ -348,7 +348,7 @@ ipcMain.handle(
     // ローカルファイルとして ~/Documents/Mienaq/ に同時書き出し
     let folderPath = ''
     try {
-      const archived = archiveMeeting({
+      const archived = await archiveMeeting({
         id: saved.id,
         title: args.title,
         startedAt: args.startedAt,
