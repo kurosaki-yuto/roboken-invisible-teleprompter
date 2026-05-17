@@ -21,6 +21,28 @@ export interface LicenseState {
   currentPeriodEnd?: number // unix秒
   lastVerifiedAt?: number // unix秒
   internalBypass?: boolean
+  // --- seat plan (法人シート課金) ---
+  teamId?: string
+  isAdmin?: boolean
+  seatStatus?: 'pending' | 'active' | 'revoked'
+  email?: string
+}
+
+export interface TeamSeatView {
+  id: string
+  email?: string
+  status: 'pending' | 'active' | 'revoked'
+  isAdmin: boolean
+  activatedAt?: number
+}
+
+export interface TeamInfo {
+  teamId: string
+  seatCount: number
+  activeSeatCount: number
+  adminEmail: string
+  status: 'active' | 'past_due' | 'canceled'
+  seats: TeamSeatView[]
 }
 
 function licensePath(): string {
@@ -104,6 +126,10 @@ export async function activateLicense(licenseKey: string): Promise<LicenseState>
     state.customerId = json.customerId
     state.subscriptionId = json.subscriptionId
     state.currentPeriodEnd = json.currentPeriodEnd
+    state.teamId = json.teamId
+    state.isAdmin = json.isAdmin
+    state.seatStatus = json.seatStatus
+    state.email = json.email
     state.lastVerifiedAt = Math.floor(Date.now() / 1000)
     writeRaw(state)
     return state
@@ -112,6 +138,99 @@ export async function activateLicense(licenseKey: string): Promise<LicenseState>
     state.status = 'inactive'
     writeRaw(state)
     throw e
+  }
+}
+
+// 招待トークン + メアドで seat activate (法人プラン社員受け取り用)
+export async function activateInvite(
+  inviteToken: string,
+  email: string,
+): Promise<LicenseState> {
+  const trimmedToken = inviteToken.trim()
+  const trimmedEmail = email.trim()
+  if (!trimmedToken) throw new Error('招待トークンを入力してください')
+  if (!trimmedEmail) throw new Error('メールアドレスを入力してください')
+
+  const state = readRaw()
+
+  const apiBase = process.env.MIENAQ_LICENSE_API_BASE || ''
+  if (!apiBase) {
+    // バックエンド未準備。暫定でローカル保存のみ (招待トークンをライセンスキー扱い)。
+    state.licenseKey = trimmedToken
+    state.email = trimmedEmail
+    state.status = 'unknown'
+    state.seatStatus = 'pending'
+    state.lastVerifiedAt = Math.floor(Date.now() / 1000)
+    writeRaw(state)
+    return state
+  }
+
+  try {
+    const res = await fetch(`${apiBase}/license/activate-invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteToken: trimmedToken, email: trimmedEmail }),
+    })
+    if (!res.ok) {
+      throw new Error(`activate-invite failed: ${res.status}`)
+    }
+    const json = (await res.json()) as Partial<LicenseState> & { licenseKey?: string }
+    if (json.licenseKey) state.licenseKey = json.licenseKey
+    state.status = json.status ?? 'active'
+    state.teamId = json.teamId
+    state.isAdmin = false
+    state.seatStatus = json.seatStatus ?? 'active'
+    state.email = json.email ?? trimmedEmail
+    state.customerId = json.customerId
+    state.subscriptionId = json.subscriptionId
+    state.currentPeriodEnd = json.currentPeriodEnd
+    state.lastVerifiedAt = Math.floor(Date.now() / 1000)
+    writeRaw(state)
+    return state
+  } catch (e) {
+    console.error('[license] activate-invite error:', e)
+    throw e
+  }
+}
+
+// 管理者向けチーム情報取得
+export async function getTeamInfo(): Promise<TeamInfo | null> {
+  const state = readRaw()
+  if (!state.teamId || !state.isAdmin || !state.licenseKey) return null
+
+  const apiBase = process.env.MIENAQ_LICENSE_API_BASE || ''
+  if (!apiBase) return null
+
+  try {
+    const res = await fetch(`${apiBase}/team/${state.teamId}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${state.licenseKey}` },
+    })
+    if (!res.ok) return null
+    return (await res.json()) as TeamInfo
+  } catch (e) {
+    console.error('[license] getTeamInfo error:', e)
+    return null
+  }
+}
+
+// 管理者向け招待URL再送
+export async function resendInvite(seatId: string): Promise<boolean> {
+  const state = readRaw()
+  if (!state.teamId || !state.isAdmin || !state.licenseKey) return false
+
+  const apiBase = process.env.MIENAQ_LICENSE_API_BASE || ''
+  if (!apiBase) return false
+
+  try {
+    const res = await fetch(`${apiBase}/team/${state.teamId}/seats/${seatId}/resend-invite`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${state.licenseKey}` },
+    })
+    return res.ok
+  } catch (e) {
+    console.error('[license] resendInvite error:', e)
+    return false
   }
 }
 
@@ -166,5 +285,9 @@ export async function deactivateLicense(): Promise<void> {
   state.customerId = undefined
   state.subscriptionId = undefined
   state.currentPeriodEnd = undefined
+  state.teamId = undefined
+  state.isAdmin = undefined
+  state.seatStatus = undefined
+  state.email = undefined
   writeRaw(state)
 }

@@ -113,12 +113,15 @@ export interface ElectronAPI {
   enableLoopbackAudio: () => Promise<void>
   disableLoopbackAudio: () => Promise<void>
 
-  // License (Stripe月額20ドルサブスク)
+  // License (Stripe月額20ドルサブスク + 法人シート課金)
   getLicense: () => Promise<LicenseStateView>
   activateLicense: (licenseKey: string) => Promise<LicenseStateView>
+  activateInvite: (inviteToken: string, email: string) => Promise<LicenseStateView>
   deactivateLicense: () => Promise<LicenseStateView>
   refreshLicense: () => Promise<LicenseStateView>
   setInternalBypass: (enabled: boolean) => Promise<LicenseStateView>
+  getTeamInfo: () => Promise<TeamInfoView | null>
+  resendInvite: (seatId: string) => Promise<boolean>
 
   // Listeners
   onSelectionBounds: (cb: (bounds: CaptureBounds) => void) => () => void
@@ -137,6 +140,28 @@ export interface LicenseStateView {
   lastVerifiedAt?: number
   internalBypass?: boolean
   featureAllowed: boolean
+  // seat plan
+  teamId?: string
+  isAdmin?: boolean
+  seatStatus?: 'pending' | 'active' | 'revoked'
+  email?: string
+}
+
+export interface TeamSeatViewMsg {
+  id: string
+  email?: string
+  status: 'pending' | 'active' | 'revoked'
+  isAdmin: boolean
+  activatedAt?: number
+}
+
+export interface TeamInfoView {
+  teamId: string
+  seatCount: number
+  activeSeatCount: number
+  adminEmail: string
+  status: 'active' | 'past_due' | 'canceled'
+  seats: TeamSeatViewMsg[]
 }
 
 export const IPC = {
@@ -162,9 +187,12 @@ export const IPC = {
   // license
   GET_LICENSE: 'get-license',
   ACTIVATE_LICENSE: 'activate-license',
+  ACTIVATE_INVITE: 'activate-invite',
   DEACTIVATE_LICENSE: 'deactivate-license',
   REFRESH_LICENSE: 'refresh-license',
   SET_INTERNAL_BYPASS: 'set-internal-bypass',
+  GET_TEAM_INFO: 'get-team-info',
+  RESEND_INVITE: 'resend-invite',
   // events (main → renderer)
   EV_SELECTION_BOUNDS: 'ev:selection-bounds',
   EV_TRIGGER_THINK: 'ev:trigger-think',

@@ -9,10 +9,13 @@ import { archiveMeeting, archiveBaseDir } from './archiver'
 import {
   getLicenseState,
   activateLicense,
+  activateInvite,
   deactivateLicense,
   refreshLicense,
   setInternalBypass,
   isFeatureAllowed,
+  getTeamInfo,
+  resendInvite,
 } from './license'
 import { GoogleGenAI } from '@google/genai'
 import Anthropic from '@anthropic-ai/sdk'
@@ -398,6 +401,10 @@ function licenseStateView() {
     lastVerifiedAt: s.lastVerifiedAt,
     internalBypass: s.internalBypass,
     featureAllowed: isFeatureAllowed(),
+    teamId: s.teamId,
+    isAdmin: s.isAdmin,
+    seatStatus: s.seatStatus,
+    email: s.email,
   }
 }
 
@@ -429,6 +436,21 @@ ipcMain.handle(IPC.SET_INTERNAL_BYPASS, (_event, enabled: boolean) => {
   const view = licenseStateView()
   broadcast(IPC.EV_LICENSE_CHANGED, view)
   return view
+})
+
+ipcMain.handle(IPC.ACTIVATE_INVITE, async (_event, inviteToken: string, email: string) => {
+  await activateInvite(inviteToken, email)
+  const view = licenseStateView()
+  broadcast(IPC.EV_LICENSE_CHANGED, view)
+  return view
+})
+
+ipcMain.handle(IPC.GET_TEAM_INFO, async () => {
+  return await getTeamInfo()
+})
+
+ipcMain.handle(IPC.RESEND_INVITE, async (_event, seatId: string) => {
+  return await resendInvite(seatId)
 })
 
 // ----- Lifecycle -----

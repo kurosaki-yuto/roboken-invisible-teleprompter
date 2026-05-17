@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { AiProvider, Language } from '../../../types/ipc'
+import type { AiProvider, Language, LicenseStateView, TeamInfoView } from '../../../types/ipc'
 
 export default function Settings() {
   const [geminiApiKey, setGeminiApiKey] = useState('')
@@ -19,6 +19,15 @@ export default function Settings() {
   } | null>(null)
   const navigate = useNavigate()
 
+  // --- license / team state ---
+  const [license, setLicense] = useState<LicenseStateView | null>(null)
+  const [licenseKeyInput, setLicenseKeyInput] = useState('')
+  const [inviteToken, setInviteToken] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [activating, setActivating] = useState(false)
+  const [teamInfo, setTeamInfo] = useState<TeamInfoView | null>(null)
+  const [teamLoading, setTeamLoading] = useState(false)
+
   useEffect(() => {
     void (async () => {
       const keys = await window.api.getApiKeys()
@@ -29,8 +38,85 @@ export default function Settings() {
       setLanguage(keys.language ?? 'ja')
       setCompanyProfile(keys.companyProfile ?? '')
       setFromEnv(!!keys.fromEnv)
+      const lic = await window.api.getLicense()
+      setLicense(lic)
     })()
+
+    const unsub = window.api.onLicenseChanged((state) => {
+      setLicense(state)
+    })
+    return () => {
+      unsub()
+    }
   }, [])
+
+  useEffect(() => {
+    if (license?.isAdmin && license?.teamId) {
+      void (async () => {
+        setTeamLoading(true)
+        try {
+          const info = await window.api.getTeamInfo()
+          setTeamInfo(info)
+        } finally {
+          setTeamLoading(false)
+        }
+      })()
+    } else {
+      setTeamInfo(null)
+    }
+  }, [license?.isAdmin, license?.teamId])
+
+  const handleActivateLicense = async () => {
+    if (!licenseKeyInput.trim()) return
+    setActivating(true)
+    setMessage(null)
+    try {
+      await window.api.activateLicense(licenseKeyInput.trim())
+      setLicenseKeyInput('')
+      setMessage({ kind: 'ok', text: 'ライセンスを有効化しました' })
+    } catch (e) {
+      setMessage({ kind: 'err', text: (e as Error).message })
+    } finally {
+      setActivating(false)
+    }
+  }
+
+  const handleActivateInvite = async () => {
+    if (!inviteToken.trim() || !inviteEmail.trim()) return
+    setActivating(true)
+    setMessage(null)
+    try {
+      await window.api.activateInvite(inviteToken.trim(), inviteEmail.trim())
+      setInviteToken('')
+      setInviteEmail('')
+      setMessage({ kind: 'ok', text: '招待を受け取り、座席を有効化しました' })
+    } catch (e) {
+      setMessage({ kind: 'err', text: (e as Error).message })
+    } finally {
+      setActivating(false)
+    }
+  }
+
+  const handleDeactivateLicense = async () => {
+    setActivating(true)
+    setMessage(null)
+    try {
+      await window.api.deactivateLicense()
+      setMessage({ kind: 'ok', text: 'ライセンスを解除しました' })
+    } catch (e) {
+      setMessage({ kind: 'err', text: (e as Error).message })
+    } finally {
+      setActivating(false)
+    }
+  }
+
+  const handleResendInvite = async (seatId: string) => {
+    const ok = await window.api.resendInvite(seatId)
+    setMessage({
+      kind: ok ? 'ok' : 'err',
+      text: ok ? '招待メールを再送しました' : '招待メール再送に失敗しました',
+    })
+  }
 
   const handleSave = async (opts?: { silent?: boolean }) => {
     setSaving(true)
@@ -324,6 +410,184 @@ export default function Settings() {
           </p>
         )}
       </section>
+
+      {/* ============ ライセンス / 法人シート管理 ============ */}
+      <section className="max-w-2xl bg-neutral-900 border border-neutral-800 rounded-lg p-6 mt-6">
+        <h2 className="text-lg font-medium mb-1">ライセンス</h2>
+        <p className="text-sm text-neutral-400 mb-4">
+          Stripe Checkout で購入したライセンスキー、または法人プランの招待トークンを入力してください。
+        </p>
+
+        {license && (
+          <div className="bg-neutral-800/50 border border-neutral-700 rounded p-3 text-xs mb-4 space-y-1">
+            <div>
+              ステータス:{' '}
+              <span
+                className={
+                  license.featureAllowed
+                    ? 'text-emerald-300 font-medium'
+                    : 'text-rose-300 font-medium'
+                }
+              >
+                {license.internalBypass ? '内部利用 (無料)' : license.status}
+              </span>
+            </div>
+            {license.teamId && (
+              <div>
+                チームID: <code className="text-neutral-300">{license.teamId}</code>
+              </div>
+            )}
+            {license.isAdmin && (
+              <div className="text-amber-300">管理者アカウント</div>
+            )}
+            {license.email && <div>メール: {license.email}</div>}
+            {license.seatStatus && (
+              <div>座席ステータス: {license.seatStatus}</div>
+            )}
+            {license.currentPeriodEnd && (
+              <div>
+                次回更新:{' '}
+                {new Date(license.currentPeriodEnd * 1000).toLocaleDateString('ja-JP')}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!license?.hasKey && (
+          <>
+            <div className="mb-4">
+              <label className="block text-xs text-neutral-400 mb-1">
+                ライセンスキー (個人プラン / 管理者キー)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={licenseKeyInput}
+                  onChange={(e) => setLicenseKeyInput(e.target.value)}
+                  className="flex-1 bg-neutral-800 rounded px-3 py-2 text-sm font-mono"
+                  placeholder="mienaq-..."
+                  autoComplete="off"
+                />
+                <button
+                  onClick={handleActivateLicense}
+                  disabled={activating || !licenseKeyInput.trim()}
+                  className="bg-sky-500 hover:bg-sky-400 disabled:opacity-50 px-4 py-2 rounded text-sm font-medium"
+                >
+                  有効化
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t border-neutral-800 pt-4 mt-4">
+              <h3 className="text-sm font-medium mb-2">招待トークンで参加 (法人プラン社員)</h3>
+              <label className="block text-xs text-neutral-400 mb-1">招待トークン</label>
+              <input
+                type="text"
+                value={inviteToken}
+                onChange={(e) => setInviteToken(e.target.value)}
+                className="w-full bg-neutral-800 rounded px-3 py-2 mb-2 text-sm font-mono"
+                placeholder="inv-..."
+                autoComplete="off"
+              />
+              <label className="block text-xs text-neutral-400 mb-1">メールアドレス</label>
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="w-full bg-neutral-800 rounded px-3 py-2 mb-2 text-sm"
+                placeholder="you@example.com"
+                autoComplete="off"
+              />
+              <button
+                onClick={handleActivateInvite}
+                disabled={activating || !inviteToken.trim() || !inviteEmail.trim()}
+                className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 px-4 py-2 rounded text-sm font-medium"
+              >
+                招待を受け取る
+              </button>
+            </div>
+          </>
+        )}
+
+        {license?.hasKey && !license.internalBypass && (
+          <button
+            onClick={handleDeactivateLicense}
+            disabled={activating}
+            className="mt-2 bg-neutral-800 hover:bg-rose-900 disabled:opacity-50 px-4 py-2 rounded text-sm text-rose-300"
+          >
+            ライセンスを解除
+          </button>
+        )}
+      </section>
+
+      {/* ============ チーム管理 (管理者のみ) ============ */}
+      {license?.isAdmin && (
+        <section className="max-w-2xl bg-neutral-900 border border-neutral-800 rounded-lg p-6 mt-6">
+          <h2 className="text-lg font-medium mb-1">チーム管理</h2>
+          <p className="text-sm text-neutral-400 mb-4">
+            シート (1ユーザ=月20ドル) の追加・削除、招待URLの再送ができます。
+          </p>
+
+          {teamLoading && <p className="text-xs text-neutral-500">読み込み中...</p>}
+
+          {teamInfo && (
+            <>
+              <div className="bg-neutral-800/50 border border-neutral-700 rounded p-3 text-xs mb-4 space-y-1">
+                <div>
+                  シート数: {teamInfo.activeSeatCount} / {teamInfo.seatCount} (アクティブ /
+                  契約)
+                </div>
+                <div>月額: ${teamInfo.seatCount * 20} (税抜)</div>
+                <div>管理者: {teamInfo.adminEmail}</div>
+                <div>ステータス: {teamInfo.status}</div>
+              </div>
+
+              <h3 className="text-sm font-medium mb-2">座席一覧</h3>
+              <div className="space-y-1 mb-4">
+                {teamInfo.seats.map((seat) => (
+                  <div
+                    key={seat.id}
+                    className="flex items-center justify-between bg-neutral-800/40 rounded px-3 py-2 text-xs"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {seat.email || '(未登録)'}
+                        {seat.isAdmin && (
+                          <span className="ml-2 text-amber-300">[管理者]</span>
+                        )}
+                      </div>
+                      <div className="text-neutral-500">
+                        {seat.status}
+                        {seat.activatedAt &&
+                          ` · 有効化: ${new Date(seat.activatedAt * 1000).toLocaleDateString('ja-JP')}`}
+                      </div>
+                    </div>
+                    {seat.status === 'pending' && (
+                      <button
+                        onClick={() => handleResendInvite(seat.id)}
+                        className="bg-neutral-700 hover:bg-neutral-600 px-2 py-1 rounded text-xs"
+                      >
+                        招待再送
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-neutral-500">
+                シート数の追加・削除・支払い方法の変更は Stripe Customer Portal で行います
+                (準備中)。
+              </p>
+            </>
+          )}
+
+          {!teamLoading && !teamInfo && (
+            <p className="text-xs text-rose-300">
+              チーム情報を取得できませんでした。バックエンド未準備の可能性があります。
+            </p>
+          )}
+        </section>
+      )}
     </div>
   )
 }

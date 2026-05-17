@@ -37,9 +37,12 @@ const api: ElectronAPI = {
 
   getLicense: () => ipcRenderer.invoke(IPC.GET_LICENSE),
   activateLicense: (key) => ipcRenderer.invoke(IPC.ACTIVATE_LICENSE, key),
+  activateInvite: (token, email) => ipcRenderer.invoke(IPC.ACTIVATE_INVITE, token, email),
   deactivateLicense: () => ipcRenderer.invoke(IPC.DEACTIVATE_LICENSE),
   refreshLicense: () => ipcRenderer.invoke(IPC.REFRESH_LICENSE),
   setInternalBypass: (enabled) => ipcRenderer.invoke(IPC.SET_INTERNAL_BYPASS, enabled),
+  getTeamInfo: () => ipcRenderer.invoke(IPC.GET_TEAM_INFO),
+  resendInvite: (seatId) => ipcRenderer.invoke(IPC.RESEND_INVITE, seatId),
 
   onSelectionBounds: (cb) => {
     const handler = (_event: unknown, bounds: CaptureBounds) => cb(bounds)
