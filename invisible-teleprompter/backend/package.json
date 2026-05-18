@@ -1,0 +1,29 @@
+{
+  "name": "mienaq-backend",
+  "version": "0.1.0",
+  "description": "Mienaq license + team seat backend (AWS Lambda + DynamoDB + Stripe Webhook)",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "package": "npm run build && cd dist && zip -r ../mienaq-backend.zip .",
+    "deploy:dev": "sam deploy --config-env dev",
+    "deploy:prod": "sam deploy --config-env prod",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/client-ses": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
+    "stripe": "^17.0.0",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.146",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.0"
+  }
+}

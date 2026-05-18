@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Mienaq license backend (Lambda + DynamoDB + Stripe Webhook + SES)
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, stg, prod]
+  StripeSecretKey:
+    Type: String
+    NoEcho: true
+    Description: Stripe sk_live or rk_live (SecretsManager 推奨、ここでは sam param 直渡し例)
+  StripeWebhookSecret:
+    Type: String
+    NoEcho: true
+  FromEmail:
+    Type: String
+    Default: support@mienaq.com
+  LpUrl:
+    Type: String
+    Default: https://mienaq.com
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        TEAMS_TABLE: !Ref TeamsTable
+        SEATS_TABLE: !Ref SeatsTable
+        STRIPE_SECRET_KEY: !Ref StripeSecretKey
+        STRIPE_WEBHOOK_SECRET: !Ref StripeWebhookSecret
+        FROM_EMAIL: !Ref FromEmail
+        LP_URL: !Ref LpUrl
+
+Resources:
+  TeamsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub mienaq-teams-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: stripeCustomerId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: stripe-customer-index
+          KeySchema:
+            - AttributeName: stripeCustomerId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  SeatsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub mienaq-team-seats-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: teamId
+          AttributeType: S
+        - AttributeName: licenseKey
+          AttributeType: S
+        - AttributeName: inviteToken
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: team-index
+          KeySchema:
+            - AttributeName: teamId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: license-index
+          KeySchema:
+            - AttributeName: licenseKey
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: invite-index
+          KeySchema:
+            - AttributeName: inviteToken
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  StripeWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/stripe-webhook.handler
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /webhook/stripe
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TeamsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SeatsTable
+        - SESCrudPolicy:
+            IdentityName: '*'
+
+  LicenseActivateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/license-activate.activate
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /license/activate
+            Method: POST
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TeamsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SeatsTable
+
+  LicenseActivateInviteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/license-activate.activateInvite
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /license/activate-invite
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TeamsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SeatsTable
+
+  TeamGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/team-info.get
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /team/{teamId}
+            Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TeamsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SeatsTable
+
+  TeamResendInviteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/team-info.resendInvite
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /team/{teamId}/seats/{seatId}/resend-invite
+            Method: POST
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TeamsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SeatsTable
+        - SESCrudPolicy:
+            IdentityName: '*'
+
+Outputs:
+  ApiUrl:
+    Description: HttpApi base URL
+    Value: !Sub https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com
