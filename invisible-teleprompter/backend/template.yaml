@@ -130,6 +130,23 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref SeatsTable
 
+  LicenseVerifyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/license-activate.verify
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /license/verify
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TeamsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SeatsTable
+
   LicenseActivateInviteFunction:
     Type: AWS::Serverless::Function
     Properties:

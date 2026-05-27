@@ -5,7 +5,13 @@ import {
   getSeatByInviteToken,
   getTeam,
   activateSeat,
+  TeamSeat,
 } from '../lib/dynamodb'
+import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb'
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}))
+const SEATS_TABLE = process.env.SEATS_TABLE || 'mienaq-team-seats'
 
 import { randomUUID } from 'crypto'
 
@@ -42,6 +48,37 @@ export const activate: APIGatewayProxyHandlerV2 = async (event) => {
     email: seat.email,
     customerId: team.stripeCustomerId,
     subscriptionId: team.stripeSubscriptionId,
+  })
+}
+
+// POST /license/verify { licenseKey }
+export const verify: APIGatewayProxyHandlerV2 = async (event) => {
+  if (!event.body) return json(400, { error: 'missing body' })
+  const { licenseKey } = JSON.parse(event.body)
+  if (!licenseKey) return json(400, { error: 'missing licenseKey' })
+
+  const seat = await getSeatByLicense(licenseKey)
+  if (!seat) return json(404, { error: 'license not found' })
+
+  const team = await getTeam(seat.teamId)
+  if (!team) return json(404, { error: 'team not found' })
+
+  await ddb.send(
+    new UpdateCommand({
+      TableName: SEATS_TABLE,
+      Key: { id: seat.id },
+      UpdateExpression: 'SET lastVerifiedAt = :t',
+      ExpressionAttributeValues: { ':t': Date.now() },
+    }),
+  )
+
+  return json(200, {
+    status: team.status === 'active' && seat.status === 'active' ? 'active' : 'inactive',
+    teamStatus: team.status,
+    seatStatus: seat.status,
+    teamId: team.id,
+    isAdmin: seat.isAdmin,
+    email: seat.email,
   })
 }
 

@@ -12,6 +12,7 @@ import {
   updateTeamStatus,
   listSeatsByTeam,
   deleteSeat,
+  getTeamByCustomer,
 } from '../lib/dynamodb'
 import { sendAdminWelcomeEmail } from '../lib/email'
 
@@ -171,8 +172,6 @@ async function handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
 async function findTeamByCustomer(
   customerId: string,
 ): Promise<{ team: Team } | null> {
-  // 簡易実装: 全 teams から線形検索 (本来は customerId index を追加)
-  // TODO: TEAMS_TABLE に GSI 追加 (stripeCustomerId-index)
-  console.warn('[stripe-webhook] findTeamByCustomer: GSI 未実装、後続で対応', customerId)
-  return null
+  const team = await getTeamByCustomer(customerId)
+  return team ? { team } : null
 }

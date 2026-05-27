@@ -10,6 +10,7 @@ import {
 
 const TEAMS_TABLE = process.env.TEAMS_TABLE || 'mienaq-teams'
 const SEATS_TABLE = process.env.SEATS_TABLE || 'mienaq-team-seats'
+const TEAMS_CUSTOMER_INDEX = 'stripe-customer-index'
 const SEATS_LICENSE_INDEX = 'license-index'
 const SEATS_TEAM_INDEX = 'team-index'
 
@@ -42,6 +43,19 @@ export interface TeamSeat {
 export async function getTeam(id: string): Promise<Team | null> {
   const r = await ddb.send(new GetCommand({ TableName: TEAMS_TABLE, Key: { id } }))
   return (r.Item as Team) || null
+}
+
+export async function getTeamByCustomer(stripeCustomerId: string): Promise<Team | null> {
+  const r = await ddb.send(
+    new QueryCommand({
+      TableName: TEAMS_TABLE,
+      IndexName: TEAMS_CUSTOMER_INDEX,
+      KeyConditionExpression: 'stripeCustomerId = :cid',
+      ExpressionAttributeValues: { ':cid': stripeCustomerId },
+      Limit: 1,
+    }),
+  )
+  return (r.Items?.[0] as Team) || null
 }
 
 export async function putTeam(team: Team): Promise<void> {
