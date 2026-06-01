@@ -16,7 +16,8 @@ Parameters:
     NoEcho: true
   FromEmail:
     Type: String
-    Default: support@mienaq.com
+    Default: no-reply@mail.mienaq.com
+    Description: SES 送信元。小林さん助言によりサブドメイン(mail.mienaq.com)で認証し、受信用 support@/dpo@ とは分離する
   LpUrl:
     Type: String
     Default: https://mienaq.com
