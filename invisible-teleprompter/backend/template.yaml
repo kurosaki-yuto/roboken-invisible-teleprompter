@@ -14,6 +14,9 @@ Parameters:
   StripeWebhookSecret:
     Type: String
     NoEcho: true
+  StripePriceId:
+    Type: String
+    Description: シート課金 price (per_unit/licensed, 月額20ドル)。price_...
   FromEmail:
     Type: String
     Default: no-reply@mail.mienaq.com
@@ -33,6 +36,7 @@ Globals:
         SEATS_TABLE: !Ref SeatsTable
         STRIPE_SECRET_KEY: !Ref StripeSecretKey
         STRIPE_WEBHOOK_SECRET: !Ref StripeWebhookSecret
+        STRIPE_PRICE_ID: !Ref StripePriceId
         FROM_EMAIL: !Ref FromEmail
         LP_URL: !Ref LpUrl
 
@@ -94,6 +98,18 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
+
+  CreateCheckoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/create-checkout.handler
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /checkout/create
+            Method: POST
 
   StripeWebhookFunction:
     Type: AWS::Serverless::Function
