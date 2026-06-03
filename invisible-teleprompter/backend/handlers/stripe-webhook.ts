@@ -114,12 +114,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
     await putSeat(inviteSeat)
   }
 
-  await sendAdminWelcomeEmail({
-    to: adminEmail,
-    teamId: team.id,
-    adminLicenseKey,
-    inviteTokens,
-  })
+  // SES 認証が未完了の間はメール送信が失敗しうる。
+  // ここで throw すると webhook が 500 → Stripe 再送 → チーム重複作成になるため、
+  // メール失敗はログのみで握りつぶし、ライセンス発行(DB)は確定させる。
+  try {
+    await sendAdminWelcomeEmail({
+      to: adminEmail,
+      teamId: team.id,
+      adminLicenseKey,
+      inviteTokens,
+    })
+  } catch (e) {
+    console.error('[webhook] sendAdminWelcomeEmail failed (team is still created):', e)
+  }
 }
 
 async function handleSubscriptionUpdated(sub: Stripe.Subscription): Promise<void> {
