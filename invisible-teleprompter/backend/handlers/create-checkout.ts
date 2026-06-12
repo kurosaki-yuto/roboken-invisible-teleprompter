@@ -1,6 +1,7 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda'
 
 import { createCheckoutSession } from '../lib/stripe'
+import { validateSeatCount } from '../lib/validation'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -22,17 +23,17 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'invalid json' }) }
   }
 
-  const seatCount = Number(body.seatCount)
-  if (!Number.isFinite(seatCount) || seatCount < 1) {
+  const seat = validateSeatCount(body.seatCount)
+  if (!seat.ok) {
     return {
       statusCode: 400,
       headers: CORS,
-      body: JSON.stringify({ error: 'seatCount must be a positive integer' }),
+      body: JSON.stringify({ error: seat.error || 'seatCount must be a positive integer' }),
     }
   }
 
   try {
-    const session = await createCheckoutSession({ seatCount, adminEmail: body.adminEmail })
+    const session = await createCheckoutSession({ seatCount: seat.value, adminEmail: body.adminEmail })
     return {
       statusCode: 200,
       headers: { ...CORS, 'Content-Type': 'application/json' },

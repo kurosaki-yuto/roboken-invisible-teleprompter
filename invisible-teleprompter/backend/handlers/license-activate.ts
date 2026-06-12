@@ -13,11 +13,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}))
 const SEATS_TABLE = process.env.SEATS_TABLE || 'mienaq-team-seats'
 
-import { randomUUID } from 'crypto'
-
-function genLicenseKey(): string {
-  return `mienaq_${randomUUID().replace(/-/g, '')}`
-}
+import { genLicenseKey, deriveLicenseStatus } from '../lib/validation'
 
 function json(statusCode: number, body: any) {
   return {
@@ -41,7 +37,7 @@ export const activate: APIGatewayProxyHandlerV2 = async (event) => {
   if (!team) return json(404, { error: 'team not found' })
 
   return json(200, {
-    status: team.status === 'active' && seat.status === 'active' ? 'active' : 'inactive',
+    status: deriveLicenseStatus(team.status, seat.status),
     teamId: team.id,
     isAdmin: seat.isAdmin,
     seatStatus: seat.status,
@@ -73,7 +69,7 @@ export const verify: APIGatewayProxyHandlerV2 = async (event) => {
   )
 
   return json(200, {
-    status: team.status === 'active' && seat.status === 'active' ? 'active' : 'inactive',
+    status: deriveLicenseStatus(team.status, seat.status),
     teamStatus: team.status,
     seatStatus: seat.status,
     teamId: team.id,

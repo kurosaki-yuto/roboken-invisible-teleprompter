@@ -6,6 +6,7 @@ import {
   getSeatByLicense,
 } from '../lib/dynamodb'
 import { sendInviteEmail } from '../lib/email'
+import { extractBearerLicenseKey } from '../lib/validation'
 
 function json(statusCode: number, body: any) {
   return {
@@ -20,7 +21,7 @@ async function authorizeAdmin(
   teamId: string,
 ): Promise<{ ok: true } | { ok: false; res: any }> {
   const auth = event.headers?.authorization || event.headers?.Authorization
-  const licenseKey = auth?.replace(/^Bearer\s+/i, '')
+  const licenseKey = extractBearerLicenseKey(auth)
   if (!licenseKey) return { ok: false, res: json(401, { error: 'missing authorization' }) }
 
   const seat = await getSeatByLicense(licenseKey)

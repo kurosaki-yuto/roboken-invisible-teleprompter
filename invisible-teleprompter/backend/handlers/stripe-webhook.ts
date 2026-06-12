@@ -15,14 +15,12 @@ import {
   getTeamByCustomer,
 } from '../lib/dynamodb'
 import { sendAdminWelcomeEmail } from '../lib/email'
-
-function genLicenseKey(): string {
-  return `mienaq_${randomUUID().replace(/-/g, '')}`
-}
-
-function genInviteToken(): string {
-  return `inv_${randomUUID().replace(/-/g, '')}`
-}
+import {
+  genLicenseKey,
+  genInviteToken,
+  genPendingLicenseKey,
+  parseSeatCountMetadata,
+} from '../lib/validation'
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const sig = event.headers['stripe-signature'] || event.headers['Stripe-Signature']
@@ -69,7 +67,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
   }
 
   const adminEmail = session.customer_email || (await getCustomerEmail(customerId))
-  const seatCount = parseInt(session.metadata?.seat_count || '1', 10)
+  const seatCount = parseSeatCountMetadata(session.metadata?.seat_count)
   const now = Date.now()
 
   const team: Team = {
@@ -105,7 +103,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session): Promis
     const inviteSeat: TeamSeat = {
       id: `seat_${randomUUID().replace(/-/g, '')}`,
       teamId: team.id,
-      licenseKey: `pending_${randomUUID().replace(/-/g, '')}`,
+      licenseKey: genPendingLicenseKey(),
       inviteToken: token,
       isAdmin: false,
       status: 'pending',
@@ -145,7 +143,7 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription): Promise<void
       await putSeat({
         id: `seat_${randomUUID().replace(/-/g, '')}`,
         teamId: team.id,
-        licenseKey: `pending_${randomUUID().replace(/-/g, '')}`,
+        licenseKey: genPendingLicenseKey(),
         inviteToken: token,
         isAdmin: false,
         status: 'pending',

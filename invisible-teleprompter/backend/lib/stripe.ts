@@ -1,5 +1,7 @@
 import Stripe from 'stripe'
 
+import { normalizeSeatCount } from './validation'
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!
 const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID!
@@ -15,7 +17,7 @@ export async function createCheckoutSession(args: {
   seatCount: number
   adminEmail?: string
 }): Promise<{ id: string; url: string | null }> {
-  const seatCount = Math.max(1, Math.floor(args.seatCount || 1))
+  const seatCount = normalizeSeatCount(args.seatCount)
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: STRIPE_PRICE_ID, quantity: seatCount }],
