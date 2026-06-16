@@ -7,16 +7,6 @@ Parameters:
     Type: String
     Default: prod
     AllowedValues: [dev, stg, prod]
-  StripeSecretKey:
-    Type: String
-    NoEcho: true
-    Description: Stripe sk_live or rk_live (SecretsManager 推奨、ここでは sam param 直渡し例)
-  StripeWebhookSecret:
-    Type: String
-    NoEcho: true
-  StripePriceId:
-    Type: String
-    Description: シート課金 price (per_unit/licensed, 月額20ドル)。price_...
   FromEmail:
     Type: String
     Default: no-reply@mail.mienaq.com
@@ -34,9 +24,9 @@ Globals:
       Variables:
         TEAMS_TABLE: !Ref TeamsTable
         SEATS_TABLE: !Ref SeatsTable
-        STRIPE_SECRET_KEY: !Ref StripeSecretKey
-        STRIPE_WEBHOOK_SECRET: !Ref StripeWebhookSecret
-        STRIPE_PRICE_ID: !Ref StripePriceId
+        STRIPE_SECRET_KEY: '{{resolve:secretsmanager:stripe/mienaq-prod:SecretString:STRIPE_SECRET_KEY}}'
+        STRIPE_WEBHOOK_SECRET: '{{resolve:secretsmanager:stripe/mienaq-prod:SecretString:STRIPE_WEBHOOK_SECRET}}'
+        STRIPE_PRICE_ID: '{{resolve:secretsmanager:stripe/mienaq-prod:SecretString:STRIPE_PRICE_ID}}'
         FROM_EMAIL: !Ref FromEmail
         LP_URL: !Ref LpUrl
 
