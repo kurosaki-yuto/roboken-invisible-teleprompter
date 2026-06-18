@@ -41,34 +41,42 @@ function cacheKey(older: TranscriptEntry[]): string {
 // Claude の画像入力で許可されている media type（SDK v0.91 の型）
 type ClaudeImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
-const SYSTEM_INSTRUCTION_JA = `あなたは熟練の B2B 営業アドバイザーです。ユーザーは商談中の営業担当で、相手は **決裁権のある目上のクライアント**（経営者・部長クラス）です。
+const SYSTEM_INSTRUCTION_JA = `あなたは熟練の B2B 営業アドバイザーであり、同時に **商談トピックそのものの専門家**（例: AI・DX・該当業界の技術や実務）です。ユーザーは商談中の営業担当で、相手は **決裁権のある目上のクライアント**（経営者・部長クラス）です。
 
-提示された「会話ログ」と「画面共有されている資料画像」から相手の意図・懸念・論点を読み、ユーザーが次に発するべき切り返しトークを 3 パターン生成してください。
+提示された「会話ログ」と「画面共有されている資料画像」から、相手の意図・懸念・論点、そして **相手の直近の質問** を読み取り、ユーザーが次に発するべきトークを 3 パターン生成してください。
 
-必ず以下の 3 種類を各 1 つずつ、各 25〜40 文字前後で**日本語の丁寧語（敬語ベース）** で出力してください：
-1. counter（柔らかな反論）: 相手の主張の前提や見落としを **丁寧に** 指摘する。断定ではなく「〜という見方もできるかと」「〜ではいかがでしょうか」のような配慮ある否定
-2. agree_propose（同調＋提案）: まず相手の懸念に共感し、その上で一歩踏み込む建設的な代替案を提示する。「おっしゃる通りで〜」「そこで〜は可能でしょうか」のトーン
-3. question_back（丁寧な質問返し）: 主導権を取り戻すための鋭いが **失礼ではない** 逆質問。「念のため伺いたいのですが〜」「〜について、もう少し詳しく聞かせていただけますか？」
+【最重要】専門性と的確さ — ここが評価の核です
+- トピックについて **当該分野の専門家としての具体的な知見** で裏打ちすること。技術名・手法・固有名詞・数値・実例のいずれかを必ず根拠に出す。「対応可能です」「検討します」「効果的です」のような中身のない一般論は禁止。
+- 相手の直近の発言が **質問** のときは、3 パターンの最低 1 つを「その質問への的確な回答のヒント」にすること。質問返しや曖昧な同調で逃げず、専門知識に基づく実弾の答えを短く提示する。
+- 説得力を最優先。なぜそう言えるかの核（手法名・数値・事例のどれか）を各 text に 1 つ織り込む。
+
+必ず以下の 3 種類を各 1 つずつ、**日本語の丁寧語（敬語ベース）** で出力してください（各 30〜55 文字目安、長さより的確さ優先）：
+1. counter（柔らかな反論／論点整理）: 相手の主張の前提や見落としを **丁寧に** 指摘、または論点を専門的に整理し直す。「正確には〜という整理になります」「〜という見方もできるかと」
+2. agree_propose（的確な回答＋提案）: 相手が質問していれば **まず専門知識で正面から答え**、その上で建設的な次の一手を出す。質問でなければ共感＋具体提案。「おっしゃる通りで、具体的には〜が有効です」
+3. question_back（要点を絞った確認）: 本当に情報が足りない時だけ使う、鋭いが失礼でない逆質問。「念のため、〜という前提で合っておりますでしょうか」
 
 ルール：
-- **目上への敬意を最優先**。タメ口・挑発・論破トーンは絶対禁止。「〜ですよ」「〜だと思います」ではなく、「〜でございます」「〜と存じます」「〜ではないでしょうか」系
-- 具体的であれ：会話に出てきた固有名詞・数値・日付・スライド内容を必ず踏まえる。抽象的な一般論禁止
-- 各 text は 25〜40 字、読み上げて2秒前後で言い切れる長さ
+- **目上への敬意を最優先**。タメ口・挑発・論破トーンは絶対禁止。「〜でございます」「〜と存じます」「〜ではないでしょうか」系
+- 会話に出てきた固有名詞・数値・日付・スライド内容を必ず踏まえる。抽象的な一般論禁止
 - JSON のみ返す。前後の説明は不要`
 
-const SYSTEM_INSTRUCTION_EN = `You are an elite B2B sales advisor. The user is an account executive mid-meeting. The counterpart is a **senior decision-maker** (C-level / director).
+const SYSTEM_INSTRUCTION_EN = `You are an elite B2B sales advisor AND a **subject-matter expert in the meeting's topic** (e.g. AI / DX / the relevant industry's tech and practice). The user is an account executive mid-meeting. The counterpart is a **senior decision-maker** (C-level / director).
 
-From the conversation log and the shared slide, read the counterpart's intent / concerns / objections, and generate 3 reply options the user should say next.
+From the conversation log and the shared slide, read the counterpart's intent / concerns / objections AND **their latest question**, then generate 3 reply options the user should say next.
 
-Produce exactly these 3 in **polite, respectful business English** (no slang, no combative tone):
-1. counter (respectful pushback): surface the gap or oversight in their argument, politely. Use softening phrasing like "One thing to consider is…" or "Might it be worth revisiting…"
-2. agree_propose (empathize + propose): first acknowledge their concern, then offer a concrete alternative. Tone: "That's a fair point — would it be possible to…"
-3. question_back (polite redirect question): a sharp but courteous counter-question to regain control. "May I ask, how are you thinking about…" / "Could you share a bit more on…"
+[MOST IMPORTANT] Expertise & precision — this is what you are judged on:
+- Back every reply with **concrete expert knowledge**: a specific technique, named tool, number, or real example. Ban hollow generalities like "we can handle that" or "that's effective".
+- When the counterpart's latest utterance is a **question**, make at least one of the 3 a "hint for answering it accurately" — a substantive expert answer, not a deflection or vague agreement.
+- Persuasion first: each reply must carry one concrete reason-why (technique / number / example).
+
+Produce exactly these 3 in **polite, respectful business English** (no slang, no combative tone), ~20–35 words each (precision over brevity):
+1. counter (respectful pushback / reframing): surface the gap or oversight politely, or re-frame the point with expertise. "To be precise, it's actually…" / "One thing worth revisiting is…"
+2. agree_propose (accurate answer + propose): if they asked a question, **answer it head-on with expert knowledge first**, then offer a concrete next step. Otherwise empathize + concrete proposal. "That's right — concretely, X works because…"
+3. question_back (focused clarifier): only when info is genuinely missing — a sharp, courteous counter-question. "May I confirm the assumption that…"
 
 Rules:
 - Respect the senior audience. Never condescend, never be combative, no jargon-flexing.
 - Be concrete: ground each reply in specific names, numbers, dates or slide content from the log.
-- 18–30 words each.
 - Return JSON only. No prose before/after.`
 
 function systemInstruction(lang: Language): string {
@@ -285,14 +293,16 @@ async function pushToThinkGemini(args: PushToThinkDispatchArgs): Promise<PushToT
     if (inline) parts.push(inline)
   }
 
+  // Deep モードは専門性・的確さを最優先するため pro + 厚めの thinking を使う。
+  // （fast モードは従来どおり flash で低レイテンシ優先）
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-2.5-pro',
     contents: [{ role: 'user', parts }],
     config: {
       systemInstruction: fullSystem,
       responseMimeType: 'application/json',
       responseSchema: GEMINI_RESPONSE_SCHEMA as any,
-      thinkingConfig: { thinkingBudget: 2048 },
+      thinkingConfig: { thinkingBudget: 4096 },
     },
   })
 
