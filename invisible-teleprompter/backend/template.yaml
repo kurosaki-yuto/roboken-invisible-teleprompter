@@ -9,15 +9,15 @@ Parameters:
     AllowedValues: [dev, stg, prod]
   FromEmail:
     Type: String
-    Default: no-reply@mail.mienaq.com
-    Description: SES 送信元。小林さん助言によりサブドメイン(mail.mienaq.com)で認証し、受信用 support@/dpo@ とは分離する
+    Default: support@mienaq.com
+    Description: 送信元。Xserver SMTP のアカウント(support@mienaq.com)を使用する
   LpUrl:
     Type: String
     Default: https://mienaq.com
 
 Globals:
   Function:
-    Runtime: nodejs20.x
+    Runtime: nodejs22.x
     Timeout: 30
     MemorySize: 512
     Environment:
@@ -29,6 +29,25 @@ Globals:
         STRIPE_PRICE_ID: '{{resolve:secretsmanager:stripe/mienaq-prod:SecretString:STRIPE_PRICE_ID}}'
         FROM_EMAIL: !Ref FromEmail
         LP_URL: !Ref LpUrl
+        # メール送信は Xserver SMTP 経由(SES審査ゲート回避)。接続情報は Secrets から注入。
+        SMTP_HOST: '{{resolve:secretsmanager:mail/xserver/support@mienaq.com:SecretString:HOST}}'
+        SMTP_USER: '{{resolve:secretsmanager:mail/xserver/support@mienaq.com:SecretString:USERNAME}}'
+        SMTP_PASS: '{{resolve:secretsmanager:mail/xserver/support@mienaq.com:SecretString:PASSWORD}}'
+        SMTP_PORT: '465'
+  # LP(別オリジン)のブラウザからの checkout 通信を許可する CORS 設定。
+  # 未設定だと mienaq.com / stg.mienaq.com からのリクエストがブラウザに弾かれ
+  # 「通信エラー」で Stripe へ遷移しない(長山さん報告の事象)。
+  HttpApi:
+    CorsConfiguration:
+      AllowOrigins:
+        - https://mienaq.com
+        - https://stg.mienaq.com
+      AllowMethods:
+        - POST
+        - OPTIONS
+      AllowHeaders:
+        - Content-Type
+        - Authorization
 
 Resources:
   TeamsTable:
