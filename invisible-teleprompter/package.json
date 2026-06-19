@@ -1,6 +1,6 @@
 {
   "name": "mienaq",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "description": "Mienaq — 画面共有に映らない透過カンペで、商談中にAIから切り返しトークがそっと届く",
   "main": "dist/main/main/index.js",
   "scripts": {
